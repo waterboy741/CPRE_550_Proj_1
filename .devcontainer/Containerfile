@@ -1,0 +1,10 @@
+FROM fedora:latest
+RUN dnf update -y && dnf install -y git
+RUN groupadd -r vscode && useradd -m -s /bin/bash -g vscode vscode
+
+RUN sudo dnf install -y gcc gcc-c++ cmake
+RUN sudo dnf install -y rpcgen rpcsvc-proto-devel libtirpc-devel -y
+RUN sudo dnf install -y iputils iproute
+
+USER vscode
+USER root

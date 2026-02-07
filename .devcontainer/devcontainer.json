@@ -1,0 +1,23 @@
+{
+	"name": "LibRPC",
+	"build": {
+		"dockerfile": "Containerfile",
+		"context": "."
+	},
+	"runArgs": ["--network=host"],
+	"customizations": {
+		"vscode": {
+			"settings": {
+			},
+			"extensions": [
+				"ms-vscode.cpptools-themes",
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.cmake-tools",
+				"ms-vscode.makefile-tools"
+			]
+		}
+	},
+	"features": {
+	}
+}

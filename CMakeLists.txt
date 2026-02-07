@@ -1,0 +1,53 @@
+cmake_minimum_required(VERSION 3.31)
+project(RPC_Project C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 17)
+
+find_library(RPC_LIBRARY
+    NAMES tirpc
+    PATHS /usr/include/tirpc
+)
+
+find_path(RPC_INCLUDE_DIR
+    NAMES rpc/rpc.h
+    PATHS /usr/include/tirpc
+)
+
+find_program(RPCGEN_EXEC "rpcgen" REQUIRED)
+
+set(SOURCE_DIR "../src/")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+
+set(CLIENT_FILE "${SOURCE_DIR}/client.c")
+set(SERVER_FILE "${SOURCE_DIR}/server.c")
+
+
+# Define variables for source and output files
+set(RPC_X_FILE "${INCLUDE_DIR}/rpc_service.x")
+set(RPC_GEN_CLIENT_C "${INCLUDE_DIR}/rpc_service_clnt.c")
+set(RPC_GEN_SERVER_C "${INCLUDE_DIR}/rpc_service_svc.c")
+set(RPC_GEN_HEADER_H "${INCLUDE_DIR}/rpc_service.h")
+
+
+add_custom_command(
+    OUTPUT ${RPC_GEN_CLIENT_C} ${RPC_GEN_SERVER_C} ${RPC_GEN_HEADER_H}
+    COMMAND ${RPCGEN_EXEC} -k ${RPC_X_FILE} 
+    DEPENDS ${RPC_X_FILE}
+    WORKING_DIRECTORY ${INCLUDE_DIR}
+    COMMENT "Generating Date RPC source files with rpcgen"
+)
+
+add_executable(client 
+    ${CLIENT_FILE}
+    ${RPC_GEN_CLIENT_C})
+    target_include_directories(client PRIVATE ${RPC_INCLUDE_DIR})
+    target_include_directories(client PRIVATE ${INCLUDE_DIR})
+    target_link_libraries(client PRIVATE ${RPC_LIBRARY})
+
+add_executable(server 
+    ${SERVER_FILE}
+    ${RPC_GEN_SERVER_C})
+    target_include_directories(server PRIVATE ${RPC_INCLUDE_DIR})
+    target_include_directories(server PRIVATE ${INCLUDE_DIR})
+    target_link_libraries(server PRIVATE ${RPC_LIBRARY})
