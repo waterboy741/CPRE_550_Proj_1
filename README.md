@@ -42,6 +42,7 @@ run make
 ./client localhost 
 ```
 ### Run the prebuilt versions locally
+These will only work on x86 machines!
 ```
 git clone https://github.com/waterboy741/CPRE_550_Proj_1.git
 navigate to the PreBuilt_Services folder
