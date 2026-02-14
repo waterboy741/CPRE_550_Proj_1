@@ -1,4 +1,7 @@
 # CPRE 5500 Project 1 RPC
+[Github Repository](https://github.com/waterboy741/CPRE_550_Proj_1)  
+[Docker Image](https://hub.docker.com/repository/docker/willgalles/rpc_container/general)  
+
 This project set out to learn RPC using SunRPC. This project consists of a client program and a server program that communicate via multiple RPC calls that allow the user to access remote information.
 ## Four Methods for running code
 ### Docker Container

@@ -1,2 +1,0 @@
-gcc -std=gnu17 -o client client.c date_clnt.c -I/usr/include/tirpc -ltirpc
-gcc -std=gnu17 -o server server.c date_svc.c -I/usr/include/tirpc -ltirpc
