@@ -21,6 +21,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
 set(CLIENT_FILE "${SOURCE_DIR}/client.c")
 set(SERVER_FILE "${SOURCE_DIR}/server.c")
+set(THREAD_FILE "${SOURCE_DIR}/computation_threads.c")
 
 
 # Define variables for source and output files
@@ -47,6 +48,7 @@ add_executable(client
 
 add_executable(server 
     ${SERVER_FILE}
+    ${THREAD_FILE}
     ${RPC_GEN_SERVER_C})
     target_include_directories(server PRIVATE ${RPC_INCLUDE_DIR})
     target_include_directories(server PRIVATE ${INCLUDE_DIR})

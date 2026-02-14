@@ -46,7 +46,7 @@ char **date_1(long *option)
                 fscanf(uptimeFile, "%f", &uptime);
                 fclose(uptimeFile);
 
-                sprintf(s, "Uptime\nDays:\t%d\nHours:\t%d\nMinutes:%d\nSeconds:%d", ((int)uptime / 8640), (((int)uptime / 360) % 24), (((int)uptime / 60) % 60), ((int)uptime % 60));
+                sprintf(s, "Uptime\nDays:\t%d\nHours:\t%d\nMinutes:%d\nSeconds:%d", ((int)uptime / 86400), (((int)uptime / 3600) % 24), (((int)uptime / 60) % 60), ((int)uptime % 60));
                 ptr = s;
                 break;
 
@@ -64,7 +64,9 @@ float *cpu_1(long *option)
 
         if (*option > 0 && *option <= 4)
         {
-                ret = cpu_loading[*option];
+                pthread_mutex_lock(cpu_lock_ptr);
+                ret = cpu_loading[*option - 1];
+                pthread_mutex_unlock(cpu_lock_ptr);
         }
         else
         {
@@ -81,7 +83,7 @@ float *memory_1(long *option)
 
         if (*option > 0 && *option <= 4)
         {
-                ret = memory_loading[*option];
+                ret = memory_loading[*option - 1];
         }
         else
         {
@@ -99,11 +101,11 @@ char **processes_1(long *option)
 
         if (*option == 1)
         {
-                sprintf(s, "There are %d active processes", (int)active_processes[*option]);
+                sprintf(s, "There are %d active processes", (int)active_processes[*option - 1]);
         }
         else if (*option > 1 && *option <= 4)
         {
-                sprintf(s, "There were an average of %f active processes", active_processes[*option]);
+                sprintf(s, "There were an average of %f active processes", active_processes[*option - 1]);
         }
         else
         {

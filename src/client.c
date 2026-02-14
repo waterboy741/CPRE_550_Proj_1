@@ -146,9 +146,26 @@ int main(int argc, char **argv)
                 clnt_perror(cl, server);
                 exit(3);
             }
+            printf("%.5f%% Loaded\n", *fresult);
+            break;
+        case 3:
+            response = get_memory_response();
+            if ((fresult = memory_1(lresult, cl)) == NULL)
+            {
+                clnt_perror(cl, server);
+                exit(3);
+            }
             printf("%.1f%% Loaded\n", *fresult);
             break;
-
+        case 4:
+            response = get_processes_response();
+            if ((sresult = date_1(lresult, cl)) == NULL)
+            {
+                clnt_perror(cl, server);
+                exit(3);
+            }
+            printf("  %s\n", *sresult);
+            break;
         default:
             printf(err);
             break;

@@ -10,6 +10,7 @@
 #include <memory.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include "computation_threads.h"
 
 static void
@@ -91,76 +92,13 @@ float *memory_loading = local_memory_loading;
 float local_active_processes[4];
 float *active_processes = local_active_processes;
 
-void run_periodic(float *output_data, computation_func_ptr f)
-{
-	for (int i = 0; i < 4; i++)
-	{
-		output_data[i] = f();
-	}
+pthread_mutex_t cpu_lock;
+pthread_mutex_t memory_lock;
+pthread_mutex_t processes_lock;
 
-	int counter = 0;
-	while (1)
-	{
-		int hour;
-		int minute;
-		int seconds;
-
-		float hour_calc;
-		float minute_calc;
-		float seconds_calc;
-
-		hour_calc = 0;
-		for (hour = 0; hour < 24; hour++)
-		{
-			minute_calc = 0;
-			for (minute = 0; minute < 60; minute++)
-			{
-				seconds_calc = 0;
-				for (seconds = 0; seconds < 60; seconds += SLEEP_DURATION)
-				{
-					output_data[0] = f();
-					seconds_calc += output_data[0];
-					sleep(SLEEP_DURATION);
-				}
-				output_data[1] = seconds_calc / (60 / SLEEP_DURATION);
-				minute_calc += output_data[1];
-			}
-			output_data[2] = minute_calc / 60;
-			hour_calc += output_data[2];
-		}
-		output_data[3] = hour_calc / 24;
-	}
-}
-
-float current_cpu_loading(void)
-{
-	return 1.0;
-}
-
-float current_memory_loading(void)
-{
-	return 1.0;
-}
-
-float current_processes(void)
-{
-	return 1.0;
-}
-
-void *cpu_tracker(void *args)
-{
-	run_periodic(cpu_loading, current_cpu_loading);
-}
-
-void *memory_computation(void *args)
-{
-	run_periodic(memory_loading, current_memory_loading);
-}
-
-void *processes_computation(void *args)
-{
-	run_periodic(active_processes, current_processes);
-}
+pthread_mutex_t *cpu_lock_ptr = &cpu_lock;
+pthread_mutex_t *memory_lock_ptr = &memory_lock;
+pthread_mutex_t *processes_lock_ptr = &processes_lock;
 
 int main(argc, argv)
 int argc;
@@ -193,6 +131,34 @@ char **argv;
 		fprintf(stderr, "%s", "unable to register (RPC_PROG, INIT_VERS, tcp).");
 		exit(1);
 	}
+
+	//===================================================================
+	pthread_mutex_init(cpu_lock_ptr, NULL);
+	pthread_mutex_init(memory_lock_ptr, NULL);
+	pthread_mutex_init(processes_lock_ptr, NULL);
+
+	struct thread_args *cpu_args = (struct thread_args *)malloc(sizeof(struct thread_args));
+	struct thread_args *memory_args = (struct thread_args *)malloc(sizeof(struct thread_args));
+	struct thread_args *processes_args = (struct thread_args *)malloc(sizeof(struct thread_args));
+
+	cpu_args->data_ptr = cpu_loading;
+	cpu_args->lock = cpu_lock_ptr;
+
+	memory_args->data_ptr = memory_loading;
+	memory_args->lock = memory_lock_ptr;
+
+	processes_args->data_ptr = active_processes;
+	processes_args->lock = processes_lock_ptr;
+
+	pthread_t cpu_thread;
+	pthread_t memory_thread;
+	pthread_t processes_thread;
+
+	pthread_create(&cpu_thread, NULL, cpu_computation, (void *)cpu_args);
+	pthread_create(&memory_thread, NULL, memory_computation, (void *)memory_args);
+	pthread_create(&processes_thread, NULL, processes_computation, (void *)processes_args);
+
+	//===================================================================
 
 	svc_run();
 	fprintf(stderr, "%s", "svc_run returned");
