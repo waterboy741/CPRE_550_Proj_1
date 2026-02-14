@@ -83,7 +83,9 @@ float *memory_1(long *option)
 
         if (*option > 0 && *option <= 4)
         {
+                pthread_mutex_lock(memory_lock_ptr);
                 ret = memory_loading[*option - 1];
+                pthread_mutex_unlock(memory_lock_ptr);
         }
         else
         {
@@ -101,11 +103,17 @@ char **processes_1(long *option)
 
         if (*option == 1)
         {
+                pthread_mutex_lock(processes_lock_ptr);
                 sprintf(s, "There are %d active processes", (int)active_processes[*option - 1]);
+                pthread_mutex_unlock(processes_lock_ptr);
+                ptr = s;
         }
         else if (*option > 1 && *option <= 4)
         {
-                sprintf(s, "There were an average of %f active processes", active_processes[*option - 1]);
+                pthread_mutex_lock(processes_lock_ptr);
+                sprintf(s, "There were an average of %.1f active processes", active_processes[*option - 1]);
+                pthread_mutex_unlock(processes_lock_ptr);
+                ptr = s;
         }
         else
         {

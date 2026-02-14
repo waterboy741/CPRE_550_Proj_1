@@ -1,5 +1,8 @@
+#include <ctype.h>
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "computation_threads.h"
 
 void run_periodic(float *output_data, pthread_mutex_t *lock, computation_func_ptr f)
@@ -149,8 +152,31 @@ float current_memory_loading(void)
 
 float current_processes(void)
 {
+
+    int count = 0;
+    DIR *proc_directory;
+    struct dirent *dir;
+
+    proc_directory = opendir("/proc");
+
+    while ((dir = readdir(proc_directory)) != NULL)
+    {
+        int is_pid = 1;
+        for (int i = 0; i < strlen(dir->d_name); i++)
+        {
+            if (!isdigit(dir->d_name[i]))
+            {
+                is_pid = 0;
+                break;
+            }
+        }
+        count += is_pid;
+    }
+
+    closedir(proc_directory);
+
     sleep(SLEEP_DURATION);
-    return 1.0;
+    return (float)count;
 }
 
 void *cpu_computation(void *args)
