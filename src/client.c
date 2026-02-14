@@ -146,7 +146,7 @@ int main(int argc, char **argv)
                 clnt_perror(cl, server);
                 exit(3);
             }
-            printf("%.5f%% Loaded\n", *fresult);
+            printf("%.3f%% Loaded\n", *fresult);
             break;
         case 3:
             response = get_memory_response();
@@ -155,7 +155,9 @@ int main(int argc, char **argv)
                 clnt_perror(cl, server);
                 exit(3);
             }
-            printf("%.1f%% Loaded\n", *fresult);
+            printf("%.0f\tKB used\n", *fresult);
+            printf("%.0f\tMB used\n", *fresult / 1000);
+            printf("%.3f\tGB used\n", *fresult / 1000000);
             break;
         case 4:
             response = get_processes_response();

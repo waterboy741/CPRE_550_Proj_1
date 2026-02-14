@@ -36,7 +36,6 @@ void run_periodic(float *output_data, pthread_mutex_t *lock, computation_func_pt
                     output_data[0] = temp;
                     seconds_calc += output_data[0];
                     pthread_mutex_unlock(lock);
-                    // sleep(SLEEP_DURATION);
                 }
                 pthread_mutex_lock(lock);
                 output_data[1] = seconds_calc / (60 / SLEEP_DURATION);
@@ -128,8 +127,24 @@ float current_cpu_loading(void)
 
 float current_memory_loading(void)
 {
+    FILE *proc_meminfo_file;
+    char line1[256];
+    char line2[256];
+    char mem_label[25];
+
+    unsigned long total_memory, free_memory;
+
+    proc_meminfo_file = fopen("/proc/meminfo", "r");
+
+    fgets(line1, sizeof(line1), proc_meminfo_file);
+    fgets(line2, sizeof(line2), proc_meminfo_file);
+    fclose(proc_meminfo_file);
+
+    sscanf(line1, "%s %lu", mem_label, &total_memory);
+    sscanf(line2, "%s %lu", mem_label, &free_memory);
+
     sleep(SLEEP_DURATION);
-    return 1.0;
+    return (total_memory - free_memory) / 1.0;
 }
 
 float current_processes(void)
