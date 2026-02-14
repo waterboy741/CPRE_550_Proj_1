@@ -3,9 +3,11 @@
  */
 
 /*
- * Define 2 procedurs :
+ * Define 4 procedures :
  * date_1() accepts a long and returns a string. 
  * cpu_1() accepts a long and returns a float. 
+ * memory_1() accepts a long and returns a float. 
+ * processes_1() accepts a long and returns a string. 
  */
 
 program RPC_PROG {

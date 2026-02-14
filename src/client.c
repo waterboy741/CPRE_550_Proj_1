@@ -8,6 +8,7 @@
 #define MAX_LEN 100
 long get_response(void);
 
+// Inital selection panel
 long get_top_level_response()
 {
     long choice;
@@ -27,6 +28,7 @@ long get_top_level_response()
     return (choice);
 }
 
+// Date and Time selection panel
 long get_time_response()
 {
     long choice;
@@ -45,6 +47,7 @@ long get_time_response()
     return (choice);
 }
 
+// CPU loading selection panel
 long get_cpu_response()
 {
     long choice;
@@ -63,12 +66,13 @@ long get_cpu_response()
     return (choice);
 }
 
+// Memory Usage selection panel
 long get_memory_response()
 {
     long choice;
 
     printf("===========================================\n");
-    printf("                   Memory Loading Menu: \n");
+    printf("                   Memory Usage Menu: \n");
     printf("-------------------------------------------\n");
     printf("                1. Current\n");
     printf("                2. Last Minute\n");
@@ -81,6 +85,7 @@ long get_memory_response()
     return (choice);
 }
 
+// Active processes selection panel
 long get_processes_response()
 {
     long choice;
@@ -128,6 +133,7 @@ int main(int argc, char **argv)
     response = get_top_level_response();
     while (response != 5)
     {
+        // Choose lower level selection panel
         switch (response)
         {
         case 1:

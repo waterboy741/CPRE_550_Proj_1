@@ -14,7 +14,8 @@
 				"ms-vscode.cpptools",
 				"ms-vscode.cpptools-extension-pack",
 				"ms-vscode.cmake-tools",
-				"ms-vscode.makefile-tools"
+				"ms-vscode.makefile-tools",
+				"streetsidesoftware.code-spell-checker"
 			]
 		}
 	},

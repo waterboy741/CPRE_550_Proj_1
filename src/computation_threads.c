@@ -5,14 +5,16 @@
 #include <string.h>
 #include "computation_threads.h"
 
+// Generic periodic function that will execute computation function and track Current, Minute, Hour, and Day averages
 void run_periodic(float *output_data, pthread_mutex_t *lock, computation_func_ptr f)
 {
+    // Initialize all averages to the first measurement
     for (int i = 0; i < 4; i++)
     {
         output_data[i] = f();
     }
 
-    int counter = 0;
+    // Continue running computations infinitely
     while (1)
     {
         int hour;
@@ -34,28 +36,34 @@ void run_periodic(float *output_data, pthread_mutex_t *lock, computation_func_pt
                 seconds_calc = 0;
                 for (seconds = 0; seconds < 60; seconds += SLEEP_DURATION)
                 {
+                    // Call to computation function
                     temp = f();
                     pthread_mutex_lock(lock);
-                    output_data[0] = temp;
-                    seconds_calc += output_data[0];
+                    // Save off Current value and collect for Minute calculation
+                    output_data[CURRENT] = temp;
+                    seconds_calc += output_data[CURRENT];
                     pthread_mutex_unlock(lock);
                 }
                 pthread_mutex_lock(lock);
-                output_data[1] = seconds_calc / (60 / SLEEP_DURATION);
-                minute_calc += output_data[1];
+                // Save off Minute value and collect for Hour calculation
+                output_data[MINUTE] = seconds_calc / (60 / SLEEP_DURATION);
+                minute_calc += output_data[MINUTE];
                 pthread_mutex_unlock(lock);
             }
             pthread_mutex_lock(lock);
-            output_data[2] = minute_calc / 60;
-            hour_calc += output_data[2];
+            // Save off Hour value and collect for Day calculation
+            output_data[HOUR] = minute_calc / 60;
+            hour_calc += output_data[HOUR];
             pthread_mutex_unlock(lock);
         }
         pthread_mutex_lock(lock);
-        output_data[3] = hour_calc / 24;
+        // Save off Day value
+        output_data[DAY] = hour_calc / 24;
         pthread_mutex_unlock(lock);
     }
 }
 
+// Computation function to calculate CPU usage using /proc/stat
 float current_cpu_loading(void)
 {
     FILE *proc_stat_file;
@@ -85,9 +93,11 @@ float current_cpu_loading(void)
         post_guest_nice;
 
     proc_stat_file = fopen("/proc/stat", "r");
+    // Get first line out of /proc/stat which holds all of the cpu information
     fgets(line, sizeof(line), proc_stat_file);
     fclose(proc_stat_file);
 
+    // Parse out each of the cpu loading values for the initial measurement
     sscanf(line, "%s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
            cpu_label,
            &init_user,
@@ -104,8 +114,11 @@ float current_cpu_loading(void)
     sleep(SLEEP_DURATION);
 
     proc_stat_file = fopen("/proc/stat", "r");
+    // Get first line out of /proc/stat which holds all of the cpu information
     fgets(line, sizeof(line), proc_stat_file);
     fclose(proc_stat_file);
+
+    // Parse out each of the cpu loading values for the second measurement
     sscanf(line, "%s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
            cpu_label,
            &post_user,
@@ -121,13 +134,18 @@ float current_cpu_loading(void)
 
     unsigned long delta_idle, delta_non_idle;
 
+    // Add up all the idle times
     delta_idle = (post_idle + post_iowait) -
                  (init_idle + init_iowait);
+    // Add up all the non idle times
     delta_non_idle = (post_user + post_nice + post_system + post_irq + post_softirq + post_steal + post_guest + post_guest_nice) -
                      (init_user + init_nice + init_system + init_irq + init_softirq + init_steal + init_guest + init_guest_nice);
+
+    // Return the percent difference between the first and last measurements
     return ((float)delta_non_idle) * 100.0 / (delta_idle + delta_non_idle);
 }
 
+// Computation function to calculate Memory usage using /proc/meminfo
 float current_memory_loading(void)
 {
     FILE *proc_meminfo_file;
@@ -139,6 +157,7 @@ float current_memory_loading(void)
 
     proc_meminfo_file = fopen("/proc/meminfo", "r");
 
+    // Get the first two lines out of /proc/meminfo for Total and Free Memory
     fgets(line1, sizeof(line1), proc_meminfo_file);
     fgets(line2, sizeof(line2), proc_meminfo_file);
     fclose(proc_meminfo_file);
@@ -147,9 +166,12 @@ float current_memory_loading(void)
     sscanf(line2, "%s %lu", mem_label, &free_memory);
 
     sleep(SLEEP_DURATION);
+
+    // Return the amount of memory in use
     return (total_memory - free_memory) / 1.0;
 }
 
+// Computation function to calculate active processes in /proc/
 float current_processes(void)
 {
 
@@ -159,17 +181,21 @@ float current_processes(void)
 
     proc_directory = opendir("/proc");
 
+    // Iterate through all of the files in the /proc/ folder
     while ((dir = readdir(proc_directory)) != NULL)
     {
         int is_pid = 1;
         for (int i = 0; i < strlen(dir->d_name); i++)
         {
+            // Check the name of each file to see if it is a PID
             if (!isdigit(dir->d_name[i]))
             {
+                // File is not just numbers so mark it as not a process and move on
                 is_pid = 0;
                 break;
             }
         }
+        // If file was just a PID increment the count
         count += is_pid;
     }
 
@@ -179,20 +205,26 @@ float current_processes(void)
     return (float)count;
 }
 
+// CPU loading thread function
 void *cpu_computation(void *args)
 {
+    // Upack data pointer and lock then start periodic computation
     struct thread_args *data = (struct thread_args *)args;
     run_periodic(data->data_ptr, data->lock, current_cpu_loading);
 }
 
+// Memory usage thread function
 void *memory_computation(void *args)
 {
+    // Upack data pointer and lock then start periodic computation
     struct thread_args *data = (struct thread_args *)args;
     run_periodic(data->data_ptr, data->lock, current_memory_loading);
 }
 
+// Active processes thread function
 void *processes_computation(void *args)
 {
+    // Upack data pointer and lock then start periodic computation
     struct thread_args *data = (struct thread_args *)args;
     run_periodic(data->data_ptr, data->lock, current_processes);
 }

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
 project(RPC_Project C CXX)
 
+# Needed for rpcgen -k generation option
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 17)
 
@@ -19,18 +20,18 @@ find_program(RPCGEN_EXEC "rpcgen" REQUIRED)
 set(SOURCE_DIR "../src/")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
+# Main files for two programs
 set(CLIENT_FILE "${SOURCE_DIR}/client.c")
 set(SERVER_FILE "${SOURCE_DIR}/server.c")
 set(THREAD_FILE "${SOURCE_DIR}/computation_threads.c")
 
-
-# Define variables for source and output files
+# Define variables for rpcgen files
 set(RPC_X_FILE "${INCLUDE_DIR}/rpc_service.x")
 set(RPC_GEN_CLIENT_C "${INCLUDE_DIR}/rpc_service_clnt.c")
 set(RPC_GEN_SERVER_C "${INCLUDE_DIR}/rpc_service_svc.c")
 set(RPC_GEN_HEADER_H "${INCLUDE_DIR}/rpc_service.h")
 
-
+# Custom command to run rpcgen when needed
 add_custom_command(
     OUTPUT ${RPC_GEN_CLIENT_C} ${RPC_GEN_SERVER_C} ${RPC_GEN_HEADER_H}
     COMMAND ${RPCGEN_EXEC} -k ${RPC_X_FILE} 
@@ -39,6 +40,7 @@ add_custom_command(
     COMMENT "Generating Date RPC source files with rpcgen"
 )
 
+#Client executable
 add_executable(client 
     ${CLIENT_FILE}
     ${RPC_GEN_CLIENT_C})
@@ -46,6 +48,7 @@ add_executable(client
     target_include_directories(client PRIVATE ${INCLUDE_DIR})
     target_link_libraries(client PRIVATE ${RPC_LIBRARY})
 
+#Server executable with extra threading utils
 add_executable(server 
     ${SERVER_FILE}
     ${THREAD_FILE}
